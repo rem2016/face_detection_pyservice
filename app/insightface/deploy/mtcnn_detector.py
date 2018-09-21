@@ -48,6 +48,9 @@ class MtcnnDetector(object):
         # load 4 models from folder
         models = ['det1', 'det2', 'det3','det4']
         models = [ os.path.join(model_folder, f) for f in models]
+
+        self.models_ = models
+        self.ctx = ctx
         
         self.PNets = []
         for i in range(num_worker):
@@ -57,6 +60,13 @@ class MtcnnDetector(object):
         #self.Pool = Pool(num_worker)
 
         self.RNet = mx.model.FeedForward.load(models[1], 1, ctx=ctx)
+        '''
+        sym, arg_params, aux_params = mx.model.load_checkpoint(models[1], 1)
+        #print(sym)
+        self.RNet = mx.mod.Module(symbol=sym, context=ctx, label_names=None)
+        self.RNet.bind(data_shapes=[('data', (18, 3, 24, 24))])
+        self.RNet.set_params(arg_params, aux_params, allow_missing=True)
+        '''
         self.ONet = mx.model.FeedForward.load(models[2], 1, ctx=ctx)
         self.LNet = mx.model.FeedForward.load(models[3], 1, ctx=ctx)
 
@@ -405,8 +415,12 @@ class MtcnnDetector(object):
             tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
             tmp[dy[i]:edy[i]+1, dx[i]:edx[i]+1, :] = img[y[i]:ey[i]+1, x[i]:ex[i]+1, :]
             input_buf[i, :, :, :] = adjust_input(cv2.resize(tmp, (24, 24)))
-
+        print(type(input_buf))
+        print(input_buf.shape)
+        #RNet = mx.model.FeedForward.load(self.models_[1], 1, ctx=self.ctx)
+        #output = RNet.predict(input_buf)
         output = self.RNet.predict(input_buf)
+        #output = self.RNet.forward(input_buf, is_train=False)
 
         # filter the total_boxes with threshold
         passed = np.where(output[1][:, 1] > self.threshold[1])

@@ -32,6 +32,7 @@ class FaceCodeMsg():
             self.msg = msg
 
     SUCCESS = CM(200,"success")
+    RECOG_ERROR = CM(300, "recognition failed")
 
 class FaceResource(Resource):
     def __init__(self , api=None, *args, **kwargs):

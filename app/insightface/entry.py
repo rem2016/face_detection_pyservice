@@ -44,6 +44,16 @@ class FaceEntry:
         print(1)
         return f1, total_cost
 
+    def extract_features_from_bytes(self, bytes_img, height=112, width=112):
+        start_time = time.time()
+        img = cv2.imdecode(np.fromstring(bytes_img, np.uint8), 1)
+        img = self.model.get_input_without_det(img, height, width)
+        f1 = self.model.get_feature(img)
+        end_time = time.time()
+        total_cost = str(end_time - start_time)
+        return f1, total_cost
+
+
     def _normalize_image(self, im):
         mean, std = cv2.meanStdDev(im)
         if std[0, 0] < 1e-6:

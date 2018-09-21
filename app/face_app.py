@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 from flask import Flask,render_template,request,redirect,url_for
 from werkzeug.utils import secure_filename
+from flask_restplus import Resource, Api, Namespace
 import os
 from insightface.entry import FaceEntry
 from common.face_common import FaceResource, FaceCommonJsonRet, FaceCodeMsg
 import time
 import numpy as np
 import json
+from flask_restplus import reqparse
 
-APP_URL_PREFIX = "/v1/api/face"
 basepath = os.path.dirname(os.path.abspath(__file__))  # 当前文件所在路径
-
 app = Flask(__name__)
-
+base_ns = Namespace("base_api", description="base_api doc and test")
+api_plus = Api(app,version="v1.0.0",title='Face_detection_server')
+api_plus.add_namespace(base_ns)
 facer =  FaceEntry()
 
 @app.route("/")
@@ -28,7 +30,7 @@ def page_not_not_found(error):
                                 data="").toJsonStr()
 
 
-@app.route(APP_URL_PREFIX+"/health_check")
+@app.route("/health_check")
 def health_check():
     return FaceCommonJsonRet(code=200,
                                 success=True,
@@ -93,5 +95,47 @@ def detection_recognition():
                               data=[str(face_vector), cost_time])
         return ret.toJsonStr()
 
+
+@base_ns.route("/recognize")
+class Recognize(FaceResource):
+    @base_ns.doc("recognize",
+                 params={"height": "height of pic",
+                         "width": "width of pic",
+                         "bytes": "bytes of image"},
+                 description=u"This method assumes that the whole image is a face.\n"
+                             u"Return the features extract from the given image")
+    def post(self):
+        parser_ = reqparse.RequestParser()
+        parser_.add_argument("height", type=int, default=112, required=True)
+        parser_.add_argument("width", type=int, default=112, required=True)
+        parser_.add_argument("bytes", type=str, required=True)
+
+        params = parser_.parse_args()
+        height = params['height']
+        width = params['width']
+        bytes = params['bytes']
+
+        try:
+            '''
+            upload_path = basepath + '/static/uploads/Tom_Hanks_54745.png'
+            print(upload_path)
+            bytes_img_f = open(upload_path, "rb")
+            print(bytes_img_f)
+            bytes = np.fromfile(bytes_img_f, dtype=np.ubyte)
+            print(bytes)
+            '''
+            face_vector, cost_time = facer.extract_features_from_bytes(bytes, height, width)
+            ret = FaceCommonJsonRet(code=FaceCodeMsg.SUCCESS.code,
+                                success=True,
+                                msg=FaceCodeMsg.SUCCESS.msg,
+                                data=[str(face_vector), cost_time])
+            return ret.toJsonStr()
+        except Exception as e:
+            ret = FaceCommonJsonRet(code=FaceCodeMsg.RECOG_ERROR.code,
+                                    success=True,
+                                    msg=FaceCodeMsg.RECOG_ERROR.msg,
+                                    data=str(e))
+            return ret.toJsonStr()
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=58481)
+    app.run(host='0.0.0.0', port=58482)

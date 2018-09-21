@@ -68,14 +68,15 @@ class FaceModel:
     self.image_size = image_size
     mtcnn_path = os.path.join(os.path.dirname(__file__), 'mtcnn-model')
     if args.det==0:
-      detector = MtcnnDetector(model_folder=mtcnn_path, ctx=mx.cpu(0), num_worker=1, accurate_landmark = True, threshold=self.det_threshold)
+      detector = MtcnnDetector(model_folder=mtcnn_path, ctx=ctx, num_worker=1, accurate_landmark = True, threshold=self.det_threshold)
     else:
-      detector = MtcnnDetector(model_folder=mtcnn_path, ctx=mx.cpu(0), num_worker=1, accurate_landmark = True, threshold=[0.0,0.0,0.2])
+      detector = MtcnnDetector(model_folder=mtcnn_path, ctx=ctx, num_worker=1, accurate_landmark = True, threshold=[0.0,0.0,0.2])
     self.detector = detector
 
 
   def get_input(self, face_img):
     start_time = time.time()
+    #'''
     ret = self.detector.detect_face(face_img, det_type = self.args.det)
     if ret is None:
       return None
@@ -84,22 +85,38 @@ class FaceModel:
       return None
     bbox = bbox[0,0:4]
     points = points[0,:].reshape((2,5)).T
-    #print(bbox)
-    #print(points)
+    print("111111")
+    print(bbox)
+    print(points)
     nimg = face_preprocess.preprocess(face_img, bbox, points, image_size='112,112')
+    #'''
+    #nimg = face_img
     nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)
+    print(nimg.shape)
     aligned = np.transpose(nimg, (2,0,1))
+    print(aligned.shape)
     end_time = time.time()
     print('cost of get input:' + str(end_time - start_time))
     return aligned
 
+  def get_input_without_det(self, face_img, height=112, width=112):
+    # nimg = face_preprocess.preprocess(face_img, bbox, points, image_size='112,112')
+    # nimg = face_img
+    nimg = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+    aligned = np.transpose(nimg, (2, 0, 1))
+    #end_time = time.time()
+    return aligned
+
   def get_feature(self, aligned):
     input_blob = np.expand_dims(aligned, axis=0)
+    print(input_blob.shape)
     data = mx.nd.array(input_blob)
+    print(data.shape)
     db = mx.io.DataBatch(data=(data,))
     self.model.forward(db, is_train=False)
     embedding = self.model.get_outputs()[0].asnumpy()
     embedding = sklearn.preprocessing.normalize(embedding).flatten()
+    print(embedding.shape)
     return embedding
 
   def get_ga(self, aligned):

@@ -1,0 +1,4 @@
+src/caffe/alignment_tools/io.cpp: In function ‘void alignment_tools::ReadImageLabelList(const string&, const int&, std::vector<std::__cxx11::basic_string<char> >&, std::vector<std::vector<float> >&)’:
+src/caffe/alignment_tools/io.cpp:52:27: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+   fgets(buf, max_path, fp);
+                           ^

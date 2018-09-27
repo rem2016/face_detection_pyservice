@@ -3,7 +3,8 @@ from flask import Flask,render_template,request,redirect,url_for
 from werkzeug.utils import secure_filename
 from flask_restplus import Resource, Api, Namespace
 import os
-from insightface.entry import FaceEntry
+#from face.insightface.entry import FaceEntry
+from face.entry import FaceEntry
 from common.face_common import FaceResource, FaceCommonJsonRet, FaceCodeMsg
 import time
 import numpy as np

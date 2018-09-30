@@ -1,0 +1,4 @@
+src/caffe/alignment_tools/util.cpp: In function ‘void alignment_tools::NormalizeImage(cv::Mat&)’:
+src/caffe/alignment_tools/util.cpp:97:98: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘size_t {aka long unsigned int}’ [-Wformat=]
+   printf("%d:%f|%f\n", i, 1.0/std.at<double>(i, 0), -1*mean.at<double>(i, 0)/std.at<double>(i, 0));
+                                                                                                  ^
